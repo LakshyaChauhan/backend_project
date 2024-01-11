@@ -1,5 +1,6 @@
 import cookieParser from "cookie-parser"
 import experss from "express"
+import cors from "cors"
 
 const app = experss()
 
@@ -18,8 +19,11 @@ app.use(experss.static("public"))
 app.use(cookieParser())
 
 // import routes
+import userRouter from "./routes/user.routes.js"
+
+// import declearation
+app.use("/api/v1/users",userRouter)
 
 
 
-
-export {app}
+export {app} 
