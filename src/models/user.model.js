@@ -36,11 +36,11 @@ const userSchmea = new  Schema(
             type : Schema.Types.ObjectId,
             ref : "Video"
         },
-        password   :{
+        password:{
             type : String,
             reqiured : [true, "Password is required"]
         },
-        refreshToken : {
+        refreshToken: {
             type : String
         }        
     },
