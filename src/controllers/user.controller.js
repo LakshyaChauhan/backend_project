@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiErrors.js";
 import {asyncHandler} from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js";
-import { uploadCloudinary } from "../utils/cloudniary.js";
+import { uploadOnCloudinary } from "../utils/cloudniary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler( async ( req, res)=>{
@@ -14,15 +14,14 @@ const registerUser = asyncHandler( async ( req, res)=>{
     // we will return the response
 
     const {username , email, fullname, password} = req.body
-    console.log(email);
 
-    if( ![username,email,fullname,password].some((fields) => 
+    if( [username,email,fullname,password].some((fields) => 
         fields?.trim() === "")
     ) {
         throw new ApiError(400,"All the fields are required...",)
     }
     
-    const exsistedUser =  User.findOne({
+    const exsistedUser = await User.findOne({
         $or : [{ username },{ email }]
     })
 
@@ -31,23 +30,30 @@ const registerUser = asyncHandler( async ( req, res)=>{
     }
 
     const avatarLocalPath = req.files?.avatar[0]?.path
-    console.log(req.files?.avatar[0]?.path);
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path 
 
-    const coverImageLocalPath = req.files?.coverImage[0]?.path
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage>0){
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
 
     if(!avatarLocalPath){
         throw new ApiError(400,"Avatar file is required.")
     }
     
-    const avatar = await uploadCloudinary(avatarLocalPath)
-    const coverImage = await uploadCloudinary(coverImageLocalPath)
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    
     
     if(!avatar){
         throw new ApiError(400,"Avatar file is required.")
     }
+    
 
     const user = await User.create({
         fullname,
+        email,
         username: username.toLowerCase(),
         avatar: avatar.url,
         coverImage : coverImage?.url || "",
@@ -58,7 +64,7 @@ const registerUser = asyncHandler( async ( req, res)=>{
         "-password -refreshToken"
     )
 
-    if(!createdUser0){
+    if(!createdUser){
         throw new ApiError(500, "Something went wrong while registering the user.")
     }
 
